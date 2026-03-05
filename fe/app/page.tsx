@@ -12,7 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch("https://nhom14chieuthu6.onrender.com/users")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`)
       .then((res) => res.json())
       .then((data) => {
         setUsers(data)
