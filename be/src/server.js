@@ -1,36 +1,23 @@
-require("dotenv").config()
+require("dotenv").config();
 
-const express = require("express")
-const cors = require("cors")
-const { PrismaClient } = require("@prisma/client")
+const express = require("express");
+const cors = require("cors");
 
-const prisma = new PrismaClient()
-const app = express()
+const userRoutes = require("./routes/user.route");
 
-app.use(cors())
-app.use(express.json())
+const app = express();
 
-app.get("/", (req,res)=>{
- res.send("API running")
-})
+app.use(cors());
+app.use(express.json());
 
-app.get("/users", async (req,res)=>{
- const users = await prisma.user.findMany()
- res.json(users)
-})
+app.get("/", (req, res) => {
+  res.send("API running");
+});
 
-app.post("/users", async (req,res)=>{
- const {name,email} = req.body
+app.use("/users", userRoutes);
 
- const user = await prisma.user.create({
-  data:{name,email}
- })
+const PORT = 5000;
 
- res.json(user)
-})
-
-const PORT = 5000
-
-app.listen(PORT, ()=>{
- console.log("Server running on port",PORT)
-})
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
