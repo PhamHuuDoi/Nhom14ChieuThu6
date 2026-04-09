@@ -55,13 +55,42 @@ app.use((err, req, res, next) => {
 });
 
 // -------------------- START SERVER --------------------
+// async function startServer() {
+//     try {
+//         await prisma.$connect();
+//         await ensureStoreLocationsTable();
+//         console.log(
+//             `Prisma connected to ${prisma.databaseMeta.host}:${prisma.databaseMeta.port}/${prisma.databaseMeta.database} as ${prisma.databaseMeta.user}`,
+//         );
+
+//         const httpServer = http.createServer(app);
+//         initSocketServer(httpServer, allowedOrigins);
+
+//         httpServer.listen(port, () => {
+//             console.log(`Server listening on port ${port}`);
+//         });
+//     } catch (error) {
+//         console.error('Failed to connect to database before starting server.');
+//         console.error(
+//             `Configured database: ${prisma.databaseMeta.host}:${prisma.databaseMeta.port}/${prisma.databaseMeta.database} as ${prisma.databaseMeta.user}`,
+//         );
+//         console.error(error instanceof Error ? error.message : error);
+//         process.exit(1);
+//     }
+// }
 async function startServer() {
     try {
         await prisma.$connect();
         await ensureStoreLocationsTable();
-        console.log(
-            `Prisma connected to ${prisma.databaseMeta.host}:${prisma.databaseMeta.port}/${prisma.databaseMeta.database} as ${prisma.databaseMeta.user}`,
-        );
+
+        // Lấy info database trực tiếp từ DATABASE_URL
+        let dbInfo = 'Not set';
+        if (process.env.DATABASE_URL) {
+            const databaseUrl = new URL(process.env.DATABASE_URL);
+            dbInfo = `${databaseUrl.hostname}:${databaseUrl.port || 3306}${databaseUrl.pathname} as ${databaseUrl.username}`;
+        }
+
+        console.log(`Prisma connected to ${dbInfo}`);
 
         const httpServer = http.createServer(app);
         initSocketServer(httpServer, allowedOrigins);
@@ -71,14 +100,18 @@ async function startServer() {
         });
     } catch (error) {
         console.error('Failed to connect to database before starting server.');
-        console.error(
-            `Configured database: ${prisma.databaseMeta.host}:${prisma.databaseMeta.port}/${prisma.databaseMeta.database} as ${prisma.databaseMeta.user}`,
-        );
+
+        // Không dùng prisma.databaseMeta nữa
+        let dbInfo = 'Not set';
+        if (process.env.DATABASE_URL) {
+            const databaseUrl = new URL(process.env.DATABASE_URL);
+            dbInfo = `${databaseUrl.hostname}:${databaseUrl.port || 3306}${databaseUrl.pathname} as ${databaseUrl.username}`;
+        }
+        console.error(`Configured database: ${dbInfo}`);
         console.error(error instanceof Error ? error.message : error);
         process.exit(1);
     }
 }
-
 void startServer();
 
 // -------------------- GRACEFUL SHUTDOWN --------------------
