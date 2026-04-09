@@ -1,4 +1,3 @@
-// server/index.js
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
@@ -6,7 +5,7 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const prisma = require('./config/prisma');
-const routes = require('./routes'); // routes/index.js
+const routes = require('./routes');
 const { initSocketServer } = require('./socket/socket');
 const { ensureStoreLocationsTable } = require('./services/store-location.service');
 
@@ -14,13 +13,15 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // -------------------- CORS --------------------
-// Lấy từ env, nếu ko set thì fallback dev localhost
-const allowedOrigins = new Set((process.env.CLIENT_URLS || 'http://localhost:3000').split(',').map((s) => s.trim()));
+// Lấy từ env, có thể nhiều URL cách nhau bằng dấu ,
+const allowedOrigins = new Set(
+    (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:3000').split(',').map((s) => s.trim()),
+);
 
 app.use(
     cors({
         origin: (origin, callback) => {
-            // origin null là Postman / SSR
+            // origin null là SSR / Postman
             if (!origin || allowedOrigins.has(origin)) return callback(null, true);
             return callback(new Error(`CORS blocked for origin: ${origin}`));
         },
@@ -43,8 +44,7 @@ app.get('/', (req, res) => {
     });
 });
 
-// Register all routes
-routes(app); // routes/index.js phải export router đầy đủ /api/user/...
+routes(app); // routes/index.js đăng ký /api/user/... đầy đủ
 
 // -------------------- ERROR HANDLER --------------------
 app.use((err, req, res, next) => {
