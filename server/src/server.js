@@ -14,7 +14,10 @@ const cors = require('cors');
 const port = process.env.PORT || 5000;
 
 // -------------------- CORS --------------------
-const allowedOrigins = new Set([process.env.CLIENT_URL].filter(Boolean));
+const allowedOrigins = new Set([
+    'http://localhost:3000', // dev frontend
+    'https://your-production-frontend.com', // frontend production
+]);
 
 app.use(
     cors({
