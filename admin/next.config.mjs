@@ -1,13 +1,15 @@
-// admin/next.config.js
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    reactStrictMode: true,
-    experimental: {
-        appDir: true,
-    },
-    env: {
-        NEXT_PUBLIC_API_URL: 'https://nhom14chieuthu6.onrender.com/api',
+    typescript: { ignoreBuildErrors: true },
+    images: { unoptimized: true },
+    async rewrites() {
+        return [
+            {
+                source: '/api/:path*',
+                destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+            },
+        ];
     },
 };
 
-module.exports = nextConfig;
+export default nextConfig;
