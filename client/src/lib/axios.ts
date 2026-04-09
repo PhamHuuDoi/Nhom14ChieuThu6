@@ -61,25 +61,30 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
         config.baseURL = resolveApiBaseUrl();
+        console.log('[Axios Request]', config.method?.toUpperCase(), config.baseURL + config.url, config.params);
         return config;
     },
-    (error: AxiosError) => Promise.reject(error)
+    (error: AxiosError) => Promise.reject(error),
 );
-axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-    config.baseURL = resolveApiBaseUrl();
-    console.log('[Axios Request]', config.method, config.baseURL + config.url, config.params);
-    return config;
-});
+
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (error: AxiosError) => {
+        console.error('[Axios Error]', {
+            message: error.message,
+            status: error.response?.status,
+            data: error.response?.data,
+            url: error.config?.url,
+            fullUrl: `${error.config?.baseURL || ''}${error.config?.url || ''}`,
+        });
+
         const shouldSkipAuthRedirect =
             (
-                (error.config as
+                error.config as
                     | (InternalAxiosRequestConfig & {
                           skipAuthRedirect?: boolean;
                       })
-                    | null)
+                    | null
             )?.skipAuthRedirect ?? false;
 
         if (error.response?.status === 401 && typeof window !== 'undefined') {
@@ -92,9 +97,8 @@ axiosInstance.interceptors.response.use(
         }
 
         const errorMessage = getReadableErrorMessage(error);
-
         return Promise.reject(new Error(errorMessage));
-    }
+    },
 );
 
 export default axiosInstance;

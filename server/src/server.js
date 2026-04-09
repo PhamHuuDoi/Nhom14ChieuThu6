@@ -38,14 +38,12 @@ app.use(
             return callback(new Error(`CORS blocked for origin: ${origin}`));
         },
         credentials: true,
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
         exposedHeaders: ['Set-Cookie'],
     })
 );
 
-// Trust proxy cho Render
-app.set('trust proxy', 1);
 // Quan trọng khi deploy trên Render
 app.set('trust proxy', 1);
 
