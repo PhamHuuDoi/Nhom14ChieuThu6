@@ -28,6 +28,7 @@
         "dev": "nodemon src/server.js",
         "db:check-wamp": "powershell -ExecutionPolicy Bypass -File ./scripts/check-wamp-mysql.ps1",
         "seed": "node scripts/seed-data.js",
+        "postinstall": "prisma generate",
         "prisma": "prisma"
     },
     "name": "server",
