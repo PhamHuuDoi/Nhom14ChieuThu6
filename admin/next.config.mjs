@@ -1,7 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    typescript: { ignoreBuildErrors: true },
-    images: { unoptimized: true },
+    typescript: {
+        ignoreBuildErrors: true,
+    },
+    images: {
+        unoptimized: true,
+    },
+    reactStrictMode: true, // thêm cái này
+    experimental: {
+        
+    },
     async rewrites() {
         return [
             {
