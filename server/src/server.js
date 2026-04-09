@@ -14,12 +14,15 @@ const port = process.env.PORT || 5000;
 
 // -------------------- CORS --------------------
 // -------------------- CORS --------------------
-const allowedOrigins = [
-    'https://nhom14-chieu-thu6-bk52.vercel.app',
-    'https://nhom14-chieu-thu6.vercel.app',
-    'http://localhost:3000',
-    'http://localhost:3001',
-];
+const allowedOrigins = new Set(
+    (process.env.CLIENT_URLS || '')
+        .split(',')
+        .map((u) => u.trim())
+        .filter(Boolean),
+);
+
+allowedOrigins.add('http://localhost:3000');
+allowedOrigins.add('http://localhost:3001');
 
 app.use(
     cors({
