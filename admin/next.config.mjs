@@ -7,14 +7,15 @@ const nextConfig = {
     images: {
         unoptimized: true,
     },
-    // Thử thêm dòng này nếu vẫn 404
-    // output: 'standalone',
 
     async rewrites() {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+        const destinationUrl = apiUrl.startsWith('http') ? apiUrl : `http://${apiUrl}`;
+
         return [
             {
                 source: '/api/:path*',
-                destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`,
+                destination: `${destinationUrl}/:path*`,
             },
         ];
     },

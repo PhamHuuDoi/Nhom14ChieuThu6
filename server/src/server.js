@@ -23,13 +23,22 @@ const allowedOrigins = new Set([
 app.use(
     cors({
         origin: (origin, callback) => {
-            // origin null là SSR / Postman
-            if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+            // Cho phép Postman, SSR, hoặc không có origin
+            if (!origin || allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            }
+            console.log(`CORS blocked: ${origin}`);
             return callback(new Error(`CORS blocked for origin: ${origin}`));
         },
-        credentials: true,
+        credentials: true, // ← Phải có
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+        exposedHeaders: ['Set-Cookie'], // ← Thêm dòng này
     }),
 );
+
+// Quan trọng khi deploy trên Render
+app.set('trust proxy', 1);
 
 // -------------------- MIDDLEWARE --------------------
 app.use(bodyParser.json());

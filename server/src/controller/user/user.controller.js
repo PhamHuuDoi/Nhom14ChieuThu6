@@ -27,8 +27,9 @@ const ONE_DAY = 24 * 60 * 60 * 1000;
 const THIRTY_DAYS = 30 * ONE_DAY;
 const COOKIE_OPTIONS = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
+    secure: process.env.NODE_ENV === 'production', // true khi deploy
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // ← Sửa ở đây
+    path: '/',
 };
 
 const SAFE_USER_SELECT = {
@@ -72,6 +73,7 @@ const setAuthCookies = (res, accessToken, refreshToken) => {
     });
 
     res.cookie('logged', 1, {
+        httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: THIRTY_DAYS,
