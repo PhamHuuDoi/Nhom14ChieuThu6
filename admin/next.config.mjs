@@ -1,15 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    reactStrictMode: true,
     typescript: {
         ignoreBuildErrors: true,
     },
     images: {
         unoptimized: true,
     },
-    reactStrictMode: true, // thêm cái này
-    experimental: {
-        
-    },
+    // Thử thêm dòng này nếu vẫn 404
+    // output: 'standalone',
+
     async rewrites() {
         return [
             {
