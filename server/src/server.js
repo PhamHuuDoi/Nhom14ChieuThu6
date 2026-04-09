@@ -15,7 +15,8 @@ const port = process.env.PORT || 5000;
 // -------------------- CORS --------------------
 // Lấy từ env, có thể nhiều URL cách nhau bằng dấu ,
 const allowedOrigins = new Set(
-    (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:3000').split(',').map((s) => s.trim()),
+    (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:3000,https://nhom14-chieu-thu6-bk52.vercel.app')
+        .split(',').map((s) => s.trim()),
 );
 
 app.use(
