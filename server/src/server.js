@@ -14,13 +14,12 @@ const port = process.env.PORT || 5000;
 
 // -------------------- CORS --------------------
 // Lấy từ env, có thể nhiều URL cách nhau bằng dấu ,
-const allowedOrigins = new Set(
-    (process.env.CLIENT_URLS || process.env.CLIENT_URL || 'http://localhost:3000'
-        , 'https://nhom14-chieu-thu6-bk52.vercel.app'
-        , 'localhost:3001')
-        .split(',').map((s) => s.trim()),
-);
-
+const allowedOrigins = new Set([
+    'https://nhom14-chieu-thu6-bk52.vercel.app',
+    'https://nhom14-chieu-thu6.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001',
+]);
 app.use(
     cors({
         origin: (origin, callback) => {
