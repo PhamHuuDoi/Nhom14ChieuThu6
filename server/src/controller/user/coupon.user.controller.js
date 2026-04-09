@@ -85,7 +85,11 @@ function validateCouponAvailability(coupon) {
 
 async function findCouponByCode(code) {
     return prisma.coupons.findUnique({
-        where: { code: String(code || '').trim().toUpperCase() },
+        where: {
+            code: String(code || '')
+                .trim()
+                .toUpperCase(),
+        },
         select: COUPON_SELECT,
     });
 }
@@ -185,7 +189,8 @@ class CouponController {
         const normalizedDiscountValue =
             payload.discountValue === undefined
                 ? undefined
-                : payload.discountType === 'percentage' || (payload.discountType === undefined && existingCoupon.discount_type === 'percentage')
+                : payload.discountType === 'percentage' ||
+                    (payload.discountType === undefined && existingCoupon.discount_type === 'percentage')
                   ? Number(payload.discountValue)
                   : normalizeVndAmount(payload.discountValue);
         const normalizedMinOrderValue =
@@ -209,10 +214,19 @@ class CouponController {
                 min_order_value: normalizedMinOrderValue,
                 max_discount_amount: normalizedMaxDiscountAmount,
                 usage_limit:
-                    payload.usageLimit === undefined ? undefined : payload.usageLimit ? Number(payload.usageLimit) : null,
-                starts_at: payload.startsAt === undefined ? undefined : payload.startsAt ? new Date(payload.startsAt) : null,
+                    payload.usageLimit === undefined
+                        ? undefined
+                        : payload.usageLimit
+                          ? Number(payload.usageLimit)
+                          : null,
+                starts_at:
+                    payload.startsAt === undefined ? undefined : payload.startsAt ? new Date(payload.startsAt) : null,
                 expires_at:
-                    payload.expiresAt === undefined ? undefined : payload.expiresAt ? new Date(payload.expiresAt) : null,
+                    payload.expiresAt === undefined
+                        ? undefined
+                        : payload.expiresAt
+                          ? new Date(payload.expiresAt)
+                          : null,
                 status: payload.status || undefined,
                 updated_at: new Date(),
             },
