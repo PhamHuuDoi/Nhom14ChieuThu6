@@ -2,24 +2,10 @@ import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import axios from 'axios';
 
 const resolveApiBaseUrl = () => {
-    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-
-    if (!configuredBaseUrl) {
-        return process.env.NEXT_PUBLIC_API_URL;
+    if (!process.env.NEXT_PUBLIC_API_URL) {
+        throw new Error('Missing NEXT_PUBLIC_API_URL');
     }
-
-    const isRelativeApiPath = configuredBaseUrl.startsWith('/');
-
-    if (isRelativeApiPath && typeof window !== 'undefined') {
-        const { hostname } = window.location;
-        const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
-
-        if (isLocalHost) {
-            return process.env.NEXT_PUBLIC_API_URL;
-        }
-    }
-
-    return configuredBaseUrl;
+    return process.env.NEXT_PUBLIC_API_URL;
 };
 
 const getReadableErrorMessage = (error: AxiosError) => {

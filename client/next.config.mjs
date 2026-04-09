@@ -1,19 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  images: {
-    unoptimized: true,
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "http://localhost:5000/api/:path*",
-      },
-    ]
-  },
-}
+    typescript: { ignoreBuildErrors: true },
+    images: { unoptimized: true },
+    async rewrites() {
+        return [
+            {
+                source: '/api/:path*',
+                destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`, // production server
+            },
+        ];
+    },
+};
 
-export default nextConfig
+export default nextConfig;

@@ -53,7 +53,12 @@ app.use((err, req, res, next) => {
         message: err.message || 'Lỗi Server',
     });
 });
-
+app.use(
+    cors({
+        origin: true, // cho tất cả domain, thử để debug
+        credentials: true,
+    }),
+);
 // -------------------- START SERVER --------------------
 // async function startServer() {
 //     try {
