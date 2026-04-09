@@ -1,0 +1,286 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model cart_items {
+  id         Int      @id @default(autoincrement())
+  cart_id    Int
+  product_id Int
+  quantity   Int      @default(1)
+  unit_price Decimal  @db.Decimal(10, 2)
+  subtotal   Decimal  @db.Decimal(10, 2)
+  carts      carts    @relation(fields: [cart_id], references: [id], onDelete: Cascade, map: "fk_cart_items_cart")
+  products   products @relation(fields: [product_id], references: [id], onDelete: Cascade, map: "fk_cart_items_product")
+
+  @@index([cart_id], map: "idx_cart_items_cart_id")
+  @@index([product_id], map: "idx_cart_items_product_id")
+}
+
+model carts {
+  id         Int          @id @default(autoincrement())
+  user_id    Int          @unique(map: "user_id")
+  created_at DateTime?    @default(now()) @db.Timestamp(0)
+  updated_at DateTime?    @default(now()) @db.Timestamp(0)
+  cart_items cart_items[]
+  users      users        @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_carts_user")
+}
+
+model categories {
+  id         Int                @id @default(autoincrement())
+  name       String             @unique(map: "name") @db.VarChar(100)
+  status     categories_status? @default(active)
+  created_at DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at DateTime?          @default(now()) @db.Timestamp(0)
+  products   products[]
+}
+
+model coupons {
+  id                  Int                   @id @default(autoincrement())
+  code                String                @unique(map: "code") @db.VarChar(50)
+  name                String                @db.VarChar(150)
+  description         String?               @db.Text
+  discount_type       coupons_discount_type
+  discount_value      Decimal               @db.Decimal(10, 2)
+  min_order_value     Decimal?              @default(0.00) @db.Decimal(10, 2)
+  max_discount_amount Decimal?              @db.Decimal(10, 2)
+  usage_limit         Int?
+  used_count          Int?                  @default(0)
+  starts_at           DateTime?             @db.Timestamp(0)
+  expires_at          DateTime?             @db.Timestamp(0)
+  status              coupons_status?       @default(active)
+  created_at          DateTime?             @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?             @default(now()) @db.Timestamp(0)
+  orders              orders[]
+}
+
+model inventory {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @db.VarChar(150)
+  unit                   String                   @db.VarChar(50)
+  quantity               Decimal?                 @default(0.00) @db.Decimal(10, 2)
+  min_quantity           Decimal?                 @default(0.00) @db.Decimal(10, 2)
+  cost_price             Decimal?                 @default(0.00) @db.Decimal(10, 2)
+  supplier_name          String?                  @db.VarChar(150)
+  status                 inventory_status?        @default(available)
+  created_at             DateTime?                @default(now()) @db.Timestamp(0)
+  updated_at             DateTime?                @default(now()) @db.Timestamp(0)
+  inventory_transactions inventory_transactions[]
+  recipes                recipes[]
+
+  @@unique([name, unit], map: "inventory_name_unit_key")
+}
+
+model inventory_transactions {
+  id           Int                         @id @default(autoincrement())
+  inventory_id Int
+  type         inventory_transactions_type
+  quantity     Decimal                     @db.Decimal(10, 2)
+  note         String?                     @db.Text
+  created_by   Int?
+  created_at   DateTime?                   @default(now()) @db.Timestamp(0)
+  inventory    inventory                   @relation(fields: [inventory_id], references: [id], onDelete: Cascade, map: "fk_inventory_transactions_inventory")
+  users        users?                      @relation(fields: [created_by], references: [id], map: "fk_inventory_transactions_user")
+
+  @@index([created_by], map: "idx_inventory_transactions_created_by")
+  @@index([inventory_id], map: "idx_inventory_transactions_inventory_id")
+}
+
+model order_items {
+  id         Int      @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  quantity   Int
+  unit_price Decimal  @db.Decimal(10, 2)
+  subtotal   Decimal  @db.Decimal(10, 2)
+  orders     orders   @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "fk_order_items_order")
+  products   products @relation(fields: [product_id], references: [id], onDelete: Cascade, map: "fk_order_items_product")
+
+  @@index([order_id], map: "idx_order_items_order_id")
+  @@index([product_id], map: "idx_order_items_product_id")
+}
+
+model orders {
+  id               Int                    @id @default(autoincrement())
+  user_id          Int
+  coupon_id        Int?
+  order_code       String                 @unique(map: "order_code") @db.VarChar(50)
+  discount_amount  Decimal?               @default(0.00) @db.Decimal(10, 2)
+  shipping_fee     Decimal?               @default(0.00) @db.Decimal(10, 2)
+  total_amount     Decimal                @db.Decimal(10, 2)
+  shipping_address String                 @db.Text
+  note             String?                @db.Text
+  order_status     orders_order_status?   @default(pending)
+  payment_status   orders_payment_status? @default(unpaid)
+  created_at       DateTime?              @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?              @default(now()) @db.Timestamp(0)
+  coupons          coupons?               @relation(fields: [coupon_id], references: [id], onDelete: SetNull, map: "fk_orders_coupon")
+  order_items      order_items[]
+  users            users                  @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_orders_user")
+  payments         payments[]
+  notifications    notifications[]
+
+  @@index([coupon_id], map: "idx_orders_coupon_id")
+  @@index([user_id], map: "idx_orders_user_id")
+}
+
+model payments {
+  id               Int              @id @default(autoincrement())
+  order_id         Int
+  amount           Decimal          @db.Decimal(10, 2)
+  method           payments_method
+  status           payments_status? @default(pending)
+  transaction_code String?          @db.VarChar(100)
+  paid_at          DateTime?        @db.Timestamp(0)
+  created_at       DateTime?        @default(now()) @db.Timestamp(0)
+  orders           orders           @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "fk_payments_order")
+
+  @@index([order_id], map: "idx_payments_order_id")
+}
+
+model products {
+  id          Int              @id @default(autoincrement())
+  name        String           @db.VarChar(150)
+  category_id Int?
+  price       Decimal          @db.Decimal(10, 2)
+  image       String?          @db.VarChar(255)
+  description String?          @db.Text
+  sku         String?          @unique(map: "sku") @db.VarChar(50)
+  status      products_status? @default(available)
+  created_at  DateTime?        @default(now()) @db.Timestamp(0)
+  updated_at  DateTime?        @default(now()) @db.Timestamp(0)
+  cart_items  cart_items[]
+  order_items order_items[]
+  categories  categories?      @relation(fields: [category_id], references: [id], map: "fk_products_category")
+  recipes     recipes[]
+
+  @@index([category_id], map: "idx_products_category_id")
+  @@unique([name, category_id], map: "products_name_category_id_key")
+}
+
+model recipes {
+  id            Int       @id @default(autoincrement())
+  product_id    Int
+  inventory_id  Int
+  quantity_used Decimal   @db.Decimal(10, 2)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  inventory     inventory @relation(fields: [inventory_id], references: [id], onDelete: Cascade, map: "fk_recipes_inventory")
+  products      products  @relation(fields: [product_id], references: [id], onDelete: Cascade, map: "fk_recipes_product")
+
+  @@index([inventory_id], map: "idx_recipes_inventory_id")
+  @@index([product_id], map: "idx_recipes_product_id")
+  @@unique([product_id, inventory_id], map: "recipes_product_inventory_key")
+}
+
+model users {
+  id                     Int                      @id @default(autoincrement())
+  name                   String                   @db.VarChar(100)
+  email                  String                   @unique(map: "email") @db.VarChar(150)
+  phone                  String?                  @db.VarChar(20)
+  password_hash          String?                  @db.VarChar(255)
+  address                String?                  @db.Text
+  latitude               Decimal?                 @db.Decimal(10, 7)
+  longitude              Decimal?                 @db.Decimal(10, 7)
+  role                   users_role?              @default(customer)
+  created_at             DateTime?                @default(now()) @db.Timestamp(0)
+  updated_at             DateTime?                @default(now()) @db.Timestamp(0)
+  facebook_id            String?                  @unique
+  google_id              String?                  @unique
+  carts                  carts?
+  inventory_transactions inventory_transactions[]
+  notifications          notifications[]
+  orders                 orders[]
+}
+
+model notifications {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  order_id   Int?
+  audience   String    @db.VarChar(20)
+  type       String    @db.VarChar(50)
+  title      String    @db.VarChar(255)
+  message    String    @db.Text
+  is_read    Boolean?  @default(false)
+  is_deleted Boolean?  @default(false)
+  read_at    DateTime? @db.Timestamp(0)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+  orders     orders?   @relation(fields: [order_id], references: [id], onDelete: SetNull, map: "fk_notifications_order")
+  users      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_notifications_user")
+
+  @@index([audience, is_read], map: "idx_notifications_audience_read")
+  @@index([order_id], map: "idx_notifications_order_id")
+  @@index([user_id, is_read], map: "idx_notifications_user_read")
+}
+
+enum categories_status {
+  active
+  inactive
+}
+
+enum coupons_discount_type {
+  percentage
+  fixed
+}
+
+enum coupons_status {
+  active
+  inactive
+}
+
+enum inventory_transactions_type {
+  import
+  export
+  adjustment
+}
+
+enum payments_method {
+  cash
+  momo
+  banking
+  zalopay
+  vnpay
+}
+
+enum payments_status {
+  pending
+  success
+  failed
+  refunded
+}
+
+enum orders_order_status {
+  pending
+  confirmed
+  preparing
+  shipping
+  completed
+  cancelled
+}
+
+enum users_role {
+  customer
+  admin
+}
+
+enum inventory_status {
+  available
+  out_of_stock
+}
+
+enum orders_payment_status {
+  unpaid
+  paid
+  failed
+  refunded
+}
+
+enum products_status {
+  available
+  out_of_stock
+  discontinued
+}
