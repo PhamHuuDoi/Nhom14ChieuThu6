@@ -6,7 +6,8 @@ import cartService from '@/services/cart.service';
 import { useAuth } from './auth-context';
 
 export interface CartItem {
-    id: number;
+    id: number; // cart item id
+    productId: number; // product id
     name: string;
     description: string;
     price: number;
@@ -29,14 +30,15 @@ const CART_STORAGE_KEY = 'thezoocoffee_cart';
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 function normalizeCartItem(item: any): CartItem {
-    return {
-        id: Number(item.id ?? item.productId ?? item.product?.id),
-        name: item.name ?? item.product?.name ?? '',
-        description: item.description ?? item.product?.description ?? '',
-        price: Number(item.price ?? item.product?.price ?? 0),
-        image: item.image ?? item.product?.image ?? '/images/store.jpg',
-        quantity: Number(item.quantity ?? 0),
-    };
+     return {
+         id: Number(item.id), // cart item id
+         productId: Number(item.productId ?? item.product?.id ?? item.id), // product id
+         name: item.name ?? item.product?.name ?? '',
+         description: item.description ?? item.product?.description ?? '',
+         price: Number(item.price ?? item.product?.price ?? 0),
+         image: item.image ?? item.product?.image ?? '/images/store.jpg',
+         quantity: Number(item.quantity ?? 0),
+     };
 }
 
 function readLocalCart(): CartItem[] {
@@ -55,7 +57,7 @@ function readLocalCart(): CartItem[] {
             return [];
         }
 
-        return parsed.map(normalizeCartItem).filter((item) => item.id > 0 && item.quantity > 0);
+        return parsed.map(normalizeCartItem).filter((item) => item.productId > 0 && item.quantity > 0);
     } catch {
         return [];
     }
@@ -137,12 +139,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         async (item: Omit<CartItem, 'quantity'>) => {
             if (!user) {
                 setItems((prevItems) => {
-                    const existingItem = prevItems.find((cartItem) => cartItem.id === item.id);
+                    const existingItem = prevItems.find((cartItem) => cartItem.productId === item.id);
                     const nextItems = existingItem
                         ? prevItems.map((cartItem) =>
-                              cartItem.id === item.id ? { ...cartItem, quantity: cartItem.quantity + 1 } : cartItem,
+                              cartItem.productId === item.id
+                                  ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                                  : cartItem,
                           )
-                        : [...prevItems, { ...item, quantity: 1 }];
+                        : [...prevItems, { ...item, productId: item.id, quantity: 1 }];
 
                     writeLocalCart(nextItems);
                     return nextItems;
@@ -157,9 +161,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
             const normalized = normalizeCartItem(addedItem);
             setItems((prevItems) => {
-                const existingItem = prevItems.find((cartItem) => cartItem.id === normalized.id);
+                const existingItem = prevItems.find((cartItem) => cartItem.productId === normalized.productId);
                 if (existingItem) {
-                    return prevItems.map((cartItem) => (cartItem.id === normalized.id ? normalized : cartItem));
+                    return prevItems.map((cartItem) =>
+                        cartItem.productId === normalized.productId ? normalized : cartItem,
+                    );
                 }
                 return [...prevItems, normalized];
             });

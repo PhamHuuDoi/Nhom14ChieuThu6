@@ -21,14 +21,13 @@ export default function CartPage() {
     const [loginNotice, setLoginNotice] = useState('');
     const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({});
 
+    // Đồng bộ quantityDrafts với items thật
     useEffect(() => {
-        setQuantityDrafts((prev) => {
-            const next: Record<number, string> = {};
-            for (const item of items) {
-                next[item.id] = prev[item.id] ?? String(item.quantity);
-            }
-            return next;
-        });
+        const next: Record<number, string> = {};
+        for (const item of items) {
+            next[item.id] = String(item.quantity);
+        }
+        setQuantityDrafts(next);
     }, [items]);
 
     const commitQuantityChange = async (itemId: number, fallbackQuantity: number) => {
@@ -67,7 +66,9 @@ export default function CartPage() {
                 <div className="mb-10">
                     <h1 className="font-serif text-4xl font-bold text-foreground md:text-5xl">Giỏ hàng của bạn</h1>
                     <p className="mt-3 text-lg text-muted-foreground">
-                        {totalItems > 0 ? `Bạn đang có ${totalItems} sản phẩm trong giỏ hàng.` : 'Giỏ hàng của bạn đang trống.'}
+                        {totalItems > 0
+                            ? `Bạn đang có ${totalItems} sản phẩm trong giỏ hàng.`
+                            : 'Giỏ hàng của bạn đang trống.'}
                     </p>
                 </div>
 
@@ -99,9 +100,15 @@ export default function CartPage() {
                             <div className="rounded-2xl border border-border bg-card">
                                 <div className="hidden border-b border-border px-6 py-4 md:grid md:grid-cols-12 md:gap-4">
                                     <div className="col-span-6 text-sm font-medium text-muted-foreground">Sản phẩm</div>
-                                    <div className="col-span-2 text-center text-sm font-medium text-muted-foreground">Số lượng</div>
-                                    <div className="col-span-2 text-center text-sm font-medium text-muted-foreground">Đơn giá</div>
-                                    <div className="col-span-2 text-right text-sm font-medium text-muted-foreground">Tạm tính</div>
+                                    <div className="col-span-2 text-center text-sm font-medium text-muted-foreground">
+                                        Số lượng
+                                    </div>
+                                    <div className="col-span-2 text-center text-sm font-medium text-muted-foreground">
+                                        Đơn giá
+                                    </div>
+                                    <div className="col-span-2 text-right text-sm font-medium text-muted-foreground">
+                                        Tạm tính
+                                    </div>
                                 </div>
 
                                 <div className="divide-y divide-border">
@@ -112,11 +119,20 @@ export default function CartPage() {
                                         >
                                             <div className="col-span-6 flex gap-4">
                                                 <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-muted">
-                                                    <Image src={item.image} alt={item.name} fill className="object-cover" />
+                                                    <Image
+                                                        src={item.image}
+                                                        alt={item.name}
+                                                        fill
+                                                        className="object-cover"
+                                                    />
                                                 </div>
                                                 <div className="flex flex-col justify-center">
-                                                    <h3 className="font-serif font-semibold text-card-foreground">{item.name}</h3>
-                                                    <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">{item.description}</p>
+                                                    <h3 className="font-serif font-semibold text-card-foreground">
+                                                        {item.name}
+                                                    </h3>
+                                                    <p className="mt-1 line-clamp-1 text-sm text-muted-foreground">
+                                                        {item.description}
+                                                    </p>
                                                     <button
                                                         onClick={() => removeFromCart(item.id)}
                                                         className="mt-2 inline-flex items-center gap-1 text-sm text-destructive hover:underline md:hidden"
@@ -128,15 +144,25 @@ export default function CartPage() {
                                             </div>
 
                                             <div className="col-span-2 flex items-center justify-between md:justify-center">
-                                                <span className="text-sm text-muted-foreground md:hidden">Số lượng:</span>
+                                                <span className="text-sm text-muted-foreground md:hidden">
+                                                    Số lượng:
+                                                </span>
                                                 <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-1">
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                        onClick={async () => {
+                                                            const nextQuantity = Math.max(1, item.quantity - 1);
+                                                            setQuantityDrafts((prev) => ({
+                                                                ...prev,
+                                                                [item.id]: String(nextQuantity),
+                                                            }));
+                                                            await updateQuantity(item.id, nextQuantity);
+                                                        }}
                                                         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                         aria-label="Giảm số lượng"
                                                     >
                                                         <Minus className="h-3.5 w-3.5" />
                                                     </button>
+
                                                     <input
                                                         type="number"
                                                         min="1"
@@ -160,8 +186,16 @@ export default function CartPage() {
                                                         className="h-7 w-12 rounded-md border border-transparent bg-transparent px-1 text-center text-sm font-medium text-foreground outline-none transition-colors focus:border-border focus:bg-white"
                                                         aria-label="Nhập số lượng sản phẩm"
                                                     />
+
                                                     <button
-                                                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                        onClick={async () => {
+                                                            const nextQuantity = item.quantity + 1;
+                                                            setQuantityDrafts((prev) => ({
+                                                                ...prev,
+                                                                [item.id]: String(nextQuantity),
+                                                            }));
+                                                            await updateQuantity(item.id, nextQuantity);
+                                                        }}
                                                         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                         aria-label="Tăng số lượng"
                                                     >
@@ -171,12 +205,18 @@ export default function CartPage() {
                                             </div>
 
                                             <div className="col-span-2 flex items-center justify-between md:justify-center">
-                                                <span className="text-sm text-muted-foreground md:hidden">Đơn giá:</span>
-                                                <span className="text-sm text-foreground">{formatCurrency(item.price)}</span>
+                                                <span className="text-sm text-muted-foreground md:hidden">
+                                                    Đơn giá:
+                                                </span>
+                                                <span className="text-sm text-foreground">
+                                                    {formatCurrency(item.price)}
+                                                </span>
                                             </div>
 
                                             <div className="col-span-2 flex items-center justify-between md:justify-end">
-                                                <span className="text-sm text-muted-foreground md:hidden">Tạm tính:</span>
+                                                <span className="text-sm text-muted-foreground md:hidden">
+                                                    Tạm tính:
+                                                </span>
                                                 <div className="flex items-center gap-3">
                                                     <span className="font-semibold text-foreground">
                                                         {formatCurrency(item.price * item.quantity)}
@@ -207,7 +247,9 @@ export default function CartPage() {
 
                         <div className="lg:col-span-1">
                             <div className="sticky top-24 rounded-2xl border border-border bg-card p-6">
-                                <h2 className="mb-6 font-serif text-xl font-semibold text-card-foreground">Tóm tắt đơn hàng</h2>
+                                <h2 className="mb-6 font-serif text-xl font-semibold text-card-foreground">
+                                    Tóm tắt đơn hàng
+                                </h2>
 
                                 <div className="space-y-4">
                                     <div className="flex items-center justify-between text-sm">
@@ -223,13 +265,18 @@ export default function CartPage() {
 
                                     <div className="flex items-center justify-between">
                                         <span className="font-semibold text-foreground">Tạm tổng</span>
-                                        <span className="text-xl font-bold text-foreground">{formatCurrency(totalPrice)}</span>
+                                        <span className="text-xl font-bold text-foreground">
+                                            {formatCurrency(totalPrice)}
+                                        </span>
                                     </div>
                                 </div>
 
                                 {user ? (
                                     <Link href="/checkout">
-                                        <Button size="lg" className="mt-6 w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+                                        <Button
+                                            size="lg"
+                                            className="mt-6 w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+                                        >
                                             Tiến hành thanh toán
                                             <ArrowRight className="h-4 w-4" />
                                         </Button>
