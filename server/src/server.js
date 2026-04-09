@@ -3,35 +3,37 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const bodyParser = require('body-parser');
-const port = process.env.PORT;
-const routes = require('./routes');
 const cookieParser = require('cookie-parser');
 const prisma = require('./config/prisma');
+const routes = require('./routes');
 const { initSocketServer } = require('./socket/socket');
 const { ensureStoreLocationsTable } = require('./services/store-location.service');
+const cors = require('cors');
 
-const cor = require('cors');
-const allowedOrigins = new Set([
-    process.env.CLIENT_URL,
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
-].filter(Boolean));
+// -------------------- PORT --------------------
+const port = process.env.PORT || 5000;
 
-app.use(cor({
-    origin: (origin, callback) => {
-        if (!origin || allowedOrigins.has(origin)) {
-            return callback(null, true);
-        }
+// -------------------- CORS --------------------
+const allowedOrigins = new Set([process.env.CLIENT_URL].filter(Boolean));
 
-        return callback(new Error(`CORS blocked for origin: ${origin}`));
-    },
-    credentials: true,
-}));
+app.use(
+    cors({
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.has(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error(`CORS blocked for origin: ${origin}`));
+        },
+        credentials: true,
+    }),
+);
+
+// -------------------- MIDDLEWARE --------------------
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// -------------------- ROUTES --------------------
 app.get('/', (req, res) => {
     res.status(200).json({
         success: true,
@@ -40,16 +42,19 @@ app.get('/', (req, res) => {
         docs: '/api',
     });
 });
+
 routes(app);
+
+// -------------------- ERROR HANDLER --------------------
 app.use((err, req, res, next) => {
     const statusCode = err.statusCode || 500;
-
     return res.status(statusCode).json({
         success: false,
         message: err.message || 'Lỗi Server',
     });
 });
 
+// -------------------- START SERVER --------------------
 async function startServer() {
     try {
         await prisma.$connect();
@@ -62,7 +67,7 @@ async function startServer() {
         initSocketServer(httpServer, allowedOrigins);
 
         httpServer.listen(port, () => {
-            console.log(`Example app listening on port ${port}`);
+            console.log(`Server listening on port ${port}`);
         });
     } catch (error) {
         console.error('Failed to connect to database before starting server.');
@@ -76,6 +81,7 @@ async function startServer() {
 
 void startServer();
 
+// -------------------- GRACEFUL SHUTDOWN --------------------
 process.on('SIGINT', async () => {
     await prisma.$disconnect();
     process.exit(0);

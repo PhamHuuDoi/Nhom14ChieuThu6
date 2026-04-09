@@ -5,7 +5,7 @@ const resolveApiBaseUrl = () => {
     const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
 
     if (!configuredBaseUrl) {
-        return 'http://localhost:5000/api';
+        return process.env.NEXT_PUBLIC_API_URL;
     }
 
     const isRelativeApiPath = configuredBaseUrl.startsWith('/');
@@ -15,7 +15,7 @@ const resolveApiBaseUrl = () => {
         const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
 
         if (isLocalHost) {
-            return 'http://localhost:5000/api';
+            return process.env.NEXT_PUBLIC_API_URL;
         }
     }
 
