@@ -65,7 +65,11 @@ axiosInstance.interceptors.request.use(
     },
     (error: AxiosError) => Promise.reject(error)
 );
-
+axiosInstance.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    config.baseURL = resolveApiBaseUrl();
+    console.log('[Axios Request]', config.method, config.baseURL + config.url, config.params);
+    return config;
+});
 axiosInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (error: AxiosError) => {
