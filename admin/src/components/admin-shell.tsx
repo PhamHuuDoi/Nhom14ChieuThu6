@@ -844,211 +844,230 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           onClick={() => setIsNotificationPanelOpen(false)}
         >
           <aside
-            className="absolute right-4 top-4 h-[calc(100vh-2rem)] w-[min(380px,calc(100vw-2rem))] overflow-y-auto rounded-[32px] border border-[var(--border)] bg-[rgba(255,253,248,0.97)] p-4 shadow-[0_28px_70px_rgba(68,45,24,0.18)]"
+            className="absolute right-4 top-4 flex h-[calc(100vh-2rem)] w-[min(480px,calc(100vw-2rem))] flex-col rounded-[32px] border border-[var(--border)] bg-[rgba(255,253,248,0.98)] shadow-[0_28px_70px_rgba(68,45,24,0.18)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 rounded-2xl bg-white px-4 py-4">
-              <div className="min-w-0">
-                <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
-                  Thông báo
-                </p>
-                <p className="mt-1 text-sm font-semibold text-[var(--foreground)]">
-                  {unreadPendingOrders.length > 0
-                    ? `${unreadPendingOrders.length} đơn chờ xác nhận`
-                    : "Không có thông báo mới"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                {unreadPendingOrders.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleMarkAllNotificationsAsRead()
-                    }}
-                    className="rounded-2xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                  >
-                    Đọc tất cả
-                  </button>
-                ) : null}
-                {allPendingOrders.length > 0 ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleClearNotifications()
-                    }}
-                    className="rounded-2xl border border-[rgba(157,49,49,0.2)] px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[rgba(157,49,49,0.08)]"
-                  >
-                    Xóa tất cả
-                  </button>
-                ) : null}
+            {/* Header cố định */}
+            <div className="shrink-0 rounded-t-[32px] border-b border-[var(--border)] bg-white px-5 py-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs uppercase tracking-[0.18em] text-[var(--muted)]">
+                    Thông báo
+                  </p>
+                  <p className="mt-0.5 text-base font-semibold text-[var(--foreground)]">
+                    {unreadPendingOrders.length > 0
+                      ? `${unreadPendingOrders.length} đơn chờ xác nhận`
+                      : "Không có thông báo mới"}
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={() => setIsNotificationPanelOpen(false)}
-                  className="rounded-2xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                  aria-label="Đóng"
                 >
-                  Đóng
+                  ✕
                 </button>
               </div>
+              {(unreadPendingOrders.length > 0 || allPendingOrders.length > 0) ? (
+                <div className="mt-3 flex items-center gap-2">
+                  {unreadPendingOrders.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleMarkAllNotificationsAsRead()
+                      }}
+                      className="rounded-xl border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                    >
+                      Đọc tất cả
+                    </button>
+                  ) : null}
+                  {allPendingOrders.length > 0 ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleClearNotifications()
+                      }}
+                      className="rounded-xl border border-[rgba(157,49,49,0.2)] px-3 py-1.5 text-xs font-semibold text-[var(--danger)] transition hover:bg-[rgba(157,49,49,0.08)]"
+                    >
+                      Xóa tất cả
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
-            <div className="mt-3 space-y-2">
-              {unreadPendingOrders.length > 0 ? (
-                unreadPendingOrders.map((pendingOrder) => {
-                  const matchedNotification = getPendingNotificationByOrderId(
-                    Number(pendingOrder.id)
-                  )
+            {/* Nội dung cuộn */}
+            <div className="flex-1 overflow-y-auto p-4">
+              <div className="space-y-3">
+                {unreadPendingOrders.length > 0 ? (
+                  unreadPendingOrders.map((pendingOrder) => {
+                    const matchedNotification = getPendingNotificationByOrderId(
+                      Number(pendingOrder.id)
+                    )
 
-                  return (
-                    <div
-                      key={pendingOrder.id}
-                      className="rounded-2xl border border-[var(--border)] bg-white px-3 py-2.5 shadow-sm"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--primary)]" />
-                            <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                              {pendingOrder.order_code}
+                    return (
+                      <div
+                        key={pendingOrder.id}
+                        className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3.5 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2">
+                              <span className="h-2.5 w-2.5 shrink-0 rounded-full bg-[var(--primary)]" />
+                              <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                                {pendingOrder.order_code}
+                              </p>
+                            </div>
+                            <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">
+                              Đơn hàng đang chờ xác nhận trước khi chuyển sang chuẩn bị.
                             </p>
                           </div>
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
-                            Đơn hàng đang chờ admin xác nhận trước khi chuyển sang chuẩn bị.
-                          </p>
-                        </div>
-                        {matchedNotification ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              void handleDeleteNotification(matchedNotification.id)
-                            }}
-                            className="rounded-full p-2 text-[var(--muted)] transition hover:bg-[rgba(157,49,49,0.08)] hover:text-[var(--danger)]"
-                            aria-label="Xóa thông báo"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        ) : null}
-                      </div>
-
-                      <div className="mt-2 flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                          {pendingOrder.payment_status === "paid"
-                            ? "Đã thanh toán"
-                            : "Chưa thanh toán"}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsNotificationPanelOpen(false)
-                              router.push(`/orders?focusOrderId=${pendingOrder.id}`)
-                            }}
-                            className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
-                          >
-                            Mở đơn
-                          </button>
                           {matchedNotification ? (
                             <button
                               type="button"
                               onClick={() => {
-                                void handleMarkNotificationAsRead(
-                                  matchedNotification.id
-                                )
+                                void handleDeleteNotification(matchedNotification.id)
                               }}
-                              className="rounded-full bg-[var(--primary)] px-2.5 py-1 text-[10px] font-semibold text-[var(--primary-foreground)]"
+                              className="shrink-0 rounded-full p-2 text-[var(--muted)] transition hover:bg-[rgba(157,49,49,0.08)] hover:text-[var(--danger)]"
+                              aria-label="Xóa thông báo"
                             >
-                              Đã đọc
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           ) : null}
                         </div>
-                      </div>
-                    </div>
-                  )
-                })
-              ) : (
-                <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--muted)]">
-                  Chưa có đơn hàng nào đang chờ xác nhận.
-                </div>
-              )}
 
-              {readPendingOrders.length > 0 ? (
-                <div className="border-t border-[var(--border)] pt-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowReadNotifications((currentValue) => !currentValue)}
-                    className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3 text-left"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-[var(--foreground)]">
-                        Thông báo đã đọc
-                      </p>
-                      <p className="text-xs text-[var(--muted)]">
-                        {readPendingOrders.length} mục đã ẩn xuống dưới
-                      </p>
-                    </div>
-                    <span className="text-xs font-semibold text-[var(--muted)]">
-                      {showReadNotifications ? "Thu gọn" : "Kéo xuống để xem thêm"}
-                    </span>
-                  </button>
-
-                  {showReadNotifications ? (
-                    <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1">
-                      {readPendingOrders.map((pendingOrder) => {
-                        const matchedNotification = getPendingNotificationByOrderId(
-                          Number(pendingOrder.id)
-                        )
-
-                        return (
-                          <div
-                            key={`read-${pendingOrder.id}`}
-                            className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-3 py-2.5"
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-semibold text-[var(--foreground)]">
-                                  {pendingOrder.order_code}
-                                </p>
-                                <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--muted)]">
-                                  Đơn chờ xác nhận đã được xem, kéo xuống để xem lại khi cần.
-                                </p>
-                              </div>
-                              {matchedNotification ? (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    void handleDeleteNotification(matchedNotification.id)
-                                  }}
-                                  className="rounded-full p-2 text-[var(--muted)] transition hover:bg-[rgba(157,49,49,0.08)] hover:text-[var(--danger)]"
-                                  aria-label="Xóa thông báo"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </button>
-                              ) : null}
-                            </div>
-
-                            <div className="mt-2 flex items-center justify-between gap-2">
-                              <span className="text-[11px] font-medium uppercase tracking-[0.14em] text-[var(--muted)]">
-                                {pendingOrder.payment_status === "paid"
-                                  ? "Đã thanh toán"
-                                  : "Chưa thanh toán"}
-                              </span>
+                        <div className="mt-3 flex items-center justify-between gap-3">
+                          <span className={[
+                            "rounded-lg px-2.5 py-1 text-xs font-medium",
+                            pendingOrder.payment_status === "paid"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
+                          ].join(" ")}>
+                            {pendingOrder.payment_status === "paid"
+                              ? "Đã thanh toán"
+                              : "Chưa thanh toán"}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsNotificationPanelOpen(false)
+                                router.push(`/orders?focusOrderId=${pendingOrder.id}`)
+                              }}
+                              className="rounded-xl border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                            >
+                              Mở đơn
+                            </button>
+                            {matchedNotification ? (
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setIsNotificationPanelOpen(false)
-                                  router.push(`/orders?focusOrderId=${pendingOrder.id}`)
+                                  void handleMarkNotificationAsRead(
+                                    matchedNotification.id
+                                  )
                                 }}
-                                className="rounded-full border border-[var(--border)] px-2.5 py-1 text-[10px] font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                                className="rounded-xl bg-[var(--primary)] px-3 py-1.5 text-xs font-semibold text-[var(--primary-foreground)] transition hover:opacity-90"
                               >
-                                Mở đơn
+                                Đã đọc
                               </button>
-                            </div>
+                            ) : null}
                           </div>
-                        )
-                      })}
-                    </div>
-                  ) : null}
-                </div>
-              ) : null}
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white px-5 py-6 text-center text-sm text-[var(--muted)]">
+                    Chưa có đơn hàng nào đang chờ xác nhận.
+                  </div>
+                )}
+
+                {readPendingOrders.length > 0 ? (
+                  <div className="border-t border-[var(--border)] pt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowReadNotifications((currentValue) => !currentValue)}
+                      className="flex w-full items-center justify-between rounded-2xl bg-white px-4 py-3.5 text-left transition hover:bg-[var(--panel)]"
+                    >
+                      <div>
+                        <p className="text-sm font-semibold text-[var(--foreground)]">
+                          Thông báo đã đọc
+                        </p>
+                        <p className="mt-0.5 text-xs text-[var(--muted)]">
+                          {readPendingOrders.length} thông báo
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs font-semibold text-[var(--muted)]">
+                        {showReadNotifications ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </span>
+                    </button>
+
+                    {showReadNotifications ? (
+                      <div className="mt-2 space-y-2">
+                        {readPendingOrders.map((pendingOrder) => {
+                          const matchedNotification = getPendingNotificationByOrderId(
+                            Number(pendingOrder.id)
+                          )
+
+                          return (
+                            <div
+                              key={`read-${pendingOrder.id}`}
+                              className="rounded-2xl border border-[var(--border)] bg-[var(--panel)] px-4 py-3.5"
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-sm font-semibold text-[var(--foreground)]">
+                                    {pendingOrder.order_code}
+                                  </p>
+                                  <p className="mt-1.5 text-xs leading-5 text-[var(--muted)]">
+                                    Đơn chờ xác nhận đã được xem.
+                                  </p>
+                                </div>
+                                {matchedNotification ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      void handleDeleteNotification(matchedNotification.id)
+                                    }}
+                                    className="shrink-0 rounded-full p-2 text-[var(--muted)] transition hover:bg-[rgba(157,49,49,0.08)] hover:text-[var(--danger)]"
+                                    aria-label="Xóa thông báo"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                ) : null}
+                              </div>
+
+                              <div className="mt-3 flex items-center justify-between gap-3">
+                                <span className={[
+                                  "rounded-lg px-2.5 py-1 text-xs font-medium",
+                                  pendingOrder.payment_status === "paid"
+                                    ? "bg-emerald-50 text-emerald-700"
+                                    : "bg-amber-50 text-amber-700"
+                                ].join(" ")}>
+                                  {pendingOrder.payment_status === "paid"
+                                    ? "Đã thanh toán"
+                                    : "Chưa thanh toán"}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIsNotificationPanelOpen(false)
+                                    router.push(`/orders?focusOrderId=${pendingOrder.id}`)
+                                  }}
+                                  className="rounded-xl border border-[var(--border)] px-3 py-1.5 text-xs font-semibold text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+                                >
+                                  Mở đơn
+                                </button>
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
             </div>
           </aside>
         </div>

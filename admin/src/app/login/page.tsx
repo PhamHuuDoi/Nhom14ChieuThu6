@@ -98,14 +98,6 @@ export default function LoginPage() {
           <p className="mt-4 max-w-md text-sm leading-7 text-white/82">
             Không gian quản trị tập trung cho sản phẩm, đơn hàng và người dùng.
           </p>
-          <div className="mt-10 grid gap-4">
-            <div className="rounded-3xl border border-white/15 bg-white/10 p-4">
-              <p className="text-sm font-semibold">Dùng chung backend</p>
-              <p className="mt-2 text-sm text-white/78">
-                Đăng nhập admin dùng chung session và cookie với website chính.
-              </p>
-            </div>
-          </div>
         </div>
 
         <div className="p-8 lg:p-10">

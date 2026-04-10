@@ -55,6 +55,7 @@ function NotificationPanel({
     onDelete,
     onClearAll,
     onOpenOrder,
+    onClose,
 }: {
     notifications: Notification[];
     onMarkAsRead: (id: number) => void;
@@ -62,6 +63,7 @@ function NotificationPanel({
     onDelete: (id: number) => void;
     onClearAll: () => void;
     onOpenOrder: (notification: Notification) => void;
+    onClose: () => void;
 }) {
     const [showReadNotifications, setShowReadNotifications] = useState(false);
 
@@ -71,7 +73,7 @@ function NotificationPanel({
     const renderNotificationCard = (notification: Notification) => (
         <div
             key={notification.id}
-            className={`rounded-2xl border px-3 py-3 ${
+            className={`rounded-2xl border px-4 py-3.5 ${
                 notification.is_read ? 'border-border/80 bg-muted/35' : 'border-border bg-card shadow-sm'
             }`}
         >
@@ -85,7 +87,7 @@ function NotificationPanel({
                             {notification.title}
                         </p>
                     </div>
-                    <p className="mt-1 line-clamp-2 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-1.5 line-clamp-3 text-xs leading-5 text-muted-foreground">
                         {notification.message}
                     </p>
                 </div>
@@ -104,7 +106,7 @@ function NotificationPanel({
                     <p className="truncate text-xs font-medium text-foreground">
                         {notification.orders?.order_code ?? 'Thông báo hệ thống'}
                     </p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">
                         {formatNotificationTime(notification.created_at)}
                     </p>
                 </div>
@@ -114,7 +116,7 @@ function NotificationPanel({
                         <button
                             type="button"
                             onClick={() => onOpenOrder(notification)}
-                            className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                            className="rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary"
                         >
                             Xem đơn
                         </button>
@@ -124,7 +126,7 @@ function NotificationPanel({
                         <button
                             type="button"
                             onClick={() => onMarkAsRead(notification.id)}
-                            className="rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground transition hover:bg-primary/90"
+                            className="rounded-xl bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground transition hover:bg-primary/90"
                         >
                             Đã đọc
                         </button>
@@ -135,81 +137,89 @@ function NotificationPanel({
     );
 
     return (
-        <div className="w-full rounded-3xl border border-border bg-background p-4 shadow-2xl md:w-[380px]">
-            <div className="flex items-center justify-between gap-3">
-                <div>
-                    <p className="text-sm font-semibold text-foreground">Thông báo</p>
-                    <p className="text-xs text-muted-foreground">
-                        {unreadNotifications.length > 0
-                            ? `${unreadNotifications.length} thông báo mới`
-                            : 'Không có thông báo mới'}
-                    </p>
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {unreadNotifications.length > 0 ? (
-                        <button
-                            type="button"
-                            onClick={onMarkAllAsRead}
-                            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                        >
-                            Đọc tất cả
-                        </button>
-                    ) : null}
-                    {notifications.length > 0 ? (
-                        <button
-                            type="button"
-                            onClick={onClearAll}
-                            className="inline-flex items-center gap-1 rounded-full border border-destructive/30 px-3 py-1.5 text-[11px] font-semibold text-destructive transition hover:bg-destructive/10"
-                        >
-                            Xóa tất cả
-                        </button>
-                    ) : null}
-                    {readNotifications.length > 0 ? (
-                        <button
-                            type="button"
-                            onClick={() => setShowReadNotifications((currentValue) => !currentValue)}
-                            className="inline-flex items-center gap-1 rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-muted-foreground transition hover:border-primary hover:text-primary"
-                        >
-                            Đã đọc {readNotifications.length}
-                            <ChevronDown
-                                className={`h-3.5 w-3.5 transition ${showReadNotifications ? 'rotate-180' : ''}`}
-                            />
-                        </button>
-                    ) : null}
-                </div>
-            </div>
-
-            <div className="mt-4 space-y-3">
-                {unreadNotifications.length > 0 ? (
-                    unreadNotifications.map(renderNotificationCard)
-                ) : (
-                    <div className="rounded-2xl border border-dashed border-border bg-card px-4 py-3 text-sm text-muted-foreground">
-                        Chưa có thông báo mới.
+        <div className="flex h-full flex-col">
+            {/* Header cố định */}
+            <div className="shrink-0 border-b border-border px-5 py-4">
+                <div className="flex items-center justify-between gap-3">
+                    <div>
+                        <p className="text-base font-semibold text-foreground">Thông báo</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                            {unreadNotifications.length > 0
+                                ? `${unreadNotifications.length} thông báo mới`
+                                : 'Không có thông báo mới'}
+                        </p>
                     </div>
-                )}
-            </div>
-
-            {readNotifications.length > 0 ? (
-                <div className="mt-4 border-t border-border pt-4">
                     <button
                         type="button"
-                        onClick={() => setShowReadNotifications((currentValue) => !currentValue)}
-                        className="flex w-full items-center justify-between rounded-2xl bg-muted/50 px-3 py-2 text-left text-sm font-medium text-foreground"
+                        onClick={onClose}
+                        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-border text-muted-foreground transition hover:border-primary hover:text-primary"
+                        aria-label="Đóng"
                     >
-                        <span>Thông báo đã đọc</span>
-                        <span className="text-xs text-muted-foreground">
-                            {showReadNotifications ? 'Thu gọn' : 'Kéo xuống để xem thêm'}
-                        </span>
+                        <X className="h-4 w-4" />
                     </button>
+                </div>
+                {(unreadNotifications.length > 0 || notifications.length > 0) ? (
+                    <div className="mt-3 flex items-center gap-2">
+                        {unreadNotifications.length > 0 ? (
+                            <button
+                                type="button"
+                                onClick={onMarkAllAsRead}
+                                className="rounded-xl border border-border px-3 py-1.5 text-xs font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                            >
+                                Đọc tất cả
+                            </button>
+                        ) : null}
+                        {notifications.length > 0 ? (
+                            <button
+                                type="button"
+                                onClick={onClearAll}
+                                className="rounded-xl border border-destructive/30 px-3 py-1.5 text-xs font-semibold text-destructive transition hover:bg-destructive/10"
+                            >
+                                Xóa tất cả
+                            </button>
+                        ) : null}
+                    </div>
+                ) : null}
+            </div>
 
-                    {showReadNotifications ? (
-                        <div className="mt-3 max-h-72 space-y-3 overflow-y-auto pr-1">
-                            {readNotifications.map(renderNotificationCard)}
+            {/* Nội dung cuộn */}
+            <div className="flex-1 overflow-y-auto p-4">
+                <div className="space-y-3">
+                    {unreadNotifications.length > 0 ? (
+                        unreadNotifications.map(renderNotificationCard)
+                    ) : (
+                        <div className="rounded-2xl border border-dashed border-border bg-card px-5 py-6 text-center text-sm text-muted-foreground">
+                            Chưa có thông báo mới.
+                        </div>
+                    )}
+
+                    {readNotifications.length > 0 ? (
+                        <div className="border-t border-border pt-3">
+                            <button
+                                type="button"
+                                onClick={() => setShowReadNotifications((currentValue) => !currentValue)}
+                                className="flex w-full items-center justify-between rounded-2xl bg-muted/50 px-4 py-3 text-left transition hover:bg-muted/70"
+                            >
+                                <div>
+                                    <p className="text-sm font-semibold text-foreground">Thông báo đã đọc</p>
+                                    <p className="mt-0.5 text-xs text-muted-foreground">
+                                        {readNotifications.length} thông báo
+                                    </p>
+                                </div>
+                                <ChevronDown
+                                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${showReadNotifications ? 'rotate-180' : ''}`}
+                                />
+                            </button>
+
+                            {showReadNotifications ? (
+                                <div className="mt-2 space-y-2">
+                                    {readNotifications.map(renderNotificationCard)}
+                                </div>
+                            ) : null}
                         </div>
                     ) : null}
                 </div>
-            ) : null}
+            </div>
         </div>
     );
 }
@@ -403,19 +413,6 @@ export function Navbar() {
                                     ) : null}
                                     <span className="sr-only">Thông báo</span>
                                 </Button>
-
-                                {notificationOpen ? (
-                                    <div className="absolute right-0 top-12 z-50">
-                                        <NotificationPanel
-                                            notifications={notifications}
-                                            onMarkAsRead={handleMarkNotificationAsRead}
-                                            onMarkAllAsRead={handleMarkAllNotificationsAsRead}
-                                            onDelete={handleDeleteNotification}
-                                            onClearAll={handleClearNotifications}
-                                            onOpenOrder={handleOpenOrderFromNotification}
-                                        />
-                                    </div>
-                                ) : null}
                             </div>
 
                             <Link href="/profile">
@@ -511,16 +508,52 @@ export function Navbar() {
                 </div>
             </nav>
 
+            {/* Desktop: overlay + side panel */}
             {notificationOpen && currentUser ? (
-                <div className="border-t border-border px-4 py-4 md:hidden">
-                    <NotificationPanel
-                        notifications={notifications}
-                        onMarkAsRead={handleMarkNotificationAsRead}
-                        onMarkAllAsRead={handleMarkAllNotificationsAsRead}
-                        onDelete={handleDeleteNotification}
-                        onClearAll={handleClearNotifications}
-                        onOpenOrder={handleOpenOrderFromNotification}
-                    />
+                <div
+                    className="fixed inset-0 z-50 hidden md:block"
+                    onClick={() => setNotificationOpen(false)}
+                >
+                    <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
+                    <aside
+                        className="absolute right-4 top-4 flex h-[calc(100vh-2rem)] w-[460px] flex-col overflow-hidden rounded-3xl border border-border bg-background shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <NotificationPanel
+                            notifications={notifications}
+                            onMarkAsRead={handleMarkNotificationAsRead}
+                            onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+                            onDelete={handleDeleteNotification}
+                            onClearAll={handleClearNotifications}
+                            onOpenOrder={handleOpenOrderFromNotification}
+                            onClose={() => setNotificationOpen(false)}
+                        />
+                    </aside>
+                </div>
+            ) : null}
+
+            {/* Mobile: bottom sheet */}
+            {notificationOpen && currentUser ? (
+                <div
+                    className="fixed inset-0 z-50 md:hidden"
+                    onClick={() => setNotificationOpen(false)}
+                >
+                    <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px]" />
+                    <aside
+                        className="absolute bottom-0 left-0 right-0 flex max-h-[80vh] flex-col overflow-hidden rounded-t-3xl border-t border-border bg-background shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="mx-auto mt-3 h-1 w-12 shrink-0 rounded-full bg-border" />
+                        <NotificationPanel
+                            notifications={notifications}
+                            onMarkAsRead={handleMarkNotificationAsRead}
+                            onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+                            onDelete={handleDeleteNotification}
+                            onClearAll={handleClearNotifications}
+                            onOpenOrder={handleOpenOrderFromNotification}
+                            onClose={() => setNotificationOpen(false)}
+                        />
+                    </aside>
                 </div>
             ) : null}
 
