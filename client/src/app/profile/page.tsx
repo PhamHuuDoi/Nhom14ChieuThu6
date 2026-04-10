@@ -374,6 +374,9 @@ export default function ProfilePage() {
     }, [otpRequested, otpTimeLeft]);
 
     const handleLogout = async () => {
+        if (isLoggingOut) {
+            return;
+        }
         setIsLoggingOut(true);
         try {
             await logout();
@@ -433,9 +436,14 @@ export default function ProfilePage() {
     const handleSaveProfile = async () => {
         const validationError = validateProfileForm();
         if (validationError) {
-            if (validationError !== '__phone_invalid__') {
-                toast({ title: 'Thông tin chưa hợp lệ', description: validationError, variant: 'destructive' });
-            }
+            toast({
+                title: 'Thông tin chưa hợp lệ',
+                description:
+                    validationError === '__phone_invalid__'
+                        ? 'Số điện thoại chưa đúng định dạng. Vui lòng nhập số Việt Nam hợp lệ.'
+                        : validationError,
+                variant: 'destructive',
+            });
             return;
         }
         setIsSavingProfile(true);
@@ -468,6 +476,9 @@ export default function ProfilePage() {
     };
 
     const handleRequestOtp = async () => {
+        if (isRequestingOtp || isVerifyingOtp) {
+            return;
+        }
         if (!passwordForm.oldPassword.trim()) {
             toast({
                 title: 'Thiếu mật khẩu hiện tại',
@@ -502,6 +513,9 @@ export default function ProfilePage() {
     };
 
     const handleVerifyOtp = async () => {
+        if (isVerifyingOtp || isRequestingOtp) {
+            return;
+        }
         if (!passwordForm.otp.trim()) {
             toast({
                 title: 'Thiếu mã OTP',

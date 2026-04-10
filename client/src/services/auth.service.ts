@@ -13,11 +13,7 @@ const AUTH_ENDPOINTS = {
 };
 
 const resolveApiBaseUrl = () => {
-    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim();
-
-    if (!configuredBaseUrl) {
-        return process.env.NEXT_PUBLIC_API_URL;
-    }
+    const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:5000/api';
 
     const isRelativeApiPath = configuredBaseUrl.startsWith('/');
 
@@ -26,7 +22,7 @@ const resolveApiBaseUrl = () => {
         const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1';
 
         if (isLocalHost) {
-            return process.env.NEXT_PUBLIC_API_URL;
+            return configuredBaseUrl;
         }
     }
 

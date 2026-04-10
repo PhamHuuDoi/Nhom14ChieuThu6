@@ -51,13 +51,49 @@ function normalizeText(value: string) {
     .trim();
 }
 
+function validateProductForm(formData: ProductFormData) {
+  if (!formData.name.trim()) return 'Vui lòng nhập tên sản phẩm.';
+  if (!formData.categoryId) return 'Vui lòng chọn danh mục.';
+
+  const price = Number(formData.price);
+  if (!formData.price || !Number.isFinite(price) || price <= 0) {
+    return 'Vui lòng nhập giá hợp lệ.';
+  }
+
+  if (formData.sku.trim().length > 100) {
+    return 'SKU không được vượt quá 100 ký tự.';
+  }
+
+  if (formData.description.trim().length > 1000) {
+    return 'Mô tả sản phẩm không được vượt quá 1000 ký tự.';
+  }
+
+  return null;
+}
+
+function validateImageFile(file: File | null) {
+  if (!file) {
+    return 'Vui lòng chọn ảnh trước khi tải lên.';
+  }
+
+  if (!file.type.startsWith('image/')) {
+    return 'Chỉ có thể tải lên tệp hình ảnh.';
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    return 'Ảnh sản phẩm phải nhỏ hơn 5MB.';
+  }
+
+  return null;
+}
+
 export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [activeDeleteProductId, setActiveDeleteProductId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [editErrorMessage, setEditErrorMessage] = useState('');
@@ -177,6 +213,15 @@ export default function ProductsPage() {
   };
 
   const handleImageUpload = async () => {
+    const imageValidationError = validateImageFile(selectedImageFile);
+    if (imageValidationError) {
+      if (showEditModal) {
+        setEditErrorMessage(imageValidationError);
+      } else {
+        setErrorMessage(imageValidationError);
+      }
+      return;
+    }
     if (!selectedImageFile) {
       if (showEditModal) {
         setEditErrorMessage('Vui lòng chọn ảnh trước khi tải lên.');
@@ -218,8 +263,13 @@ export default function ProductsPage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting || isUploadingImage) return;
     setErrorMessage('');
     setSuccessMessage('');
+    const validationError = validateProductForm(formData);
+    if (validationError) {
+      return setErrorMessage(validationError);
+    }
 
     if (!formData.name.trim()) return setErrorMessage('Vui lòng nhập tên sản phẩm.');
     if (!formData.categoryId) return setErrorMessage('Vui lòng chọn danh mục.');
@@ -271,9 +321,14 @@ export default function ProductsPage() {
 
   const handleEditSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting || isUploadingImage) return;
     setEditErrorMessage('');
 
     if (!editingProduct) return;
+    const validationError = validateProductForm(editFormData);
+    if (validationError) {
+      return setEditErrorMessage(validationError);
+    }
     if (!editFormData.name.trim()) return setEditErrorMessage('Vui lòng nhập tên sản phẩm.');
     if (!editFormData.categoryId) return setEditErrorMessage('Vui lòng chọn danh mục.');
     if (!editFormData.price || Number(editFormData.price) <= 0) {
@@ -309,7 +364,7 @@ export default function ProductsPage() {
   const handleDelete = async (product: Product) => {
     if (!confirm(`Bạn có chắc muốn xóa sản phẩm "${product.name}"?`)) return;
 
-    setIsDeleting(true);
+    setActiveDeleteProductId(product.id);
     setErrorMessage('');
     setSuccessMessage('');
 
@@ -321,7 +376,7 @@ export default function ProductsPage() {
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'Không thể xóa sản phẩm.');
     } finally {
-      setIsDeleting(false);
+      setActiveDeleteProductId(null);
     }
   };
 
@@ -530,7 +585,7 @@ export default function ProductsPage() {
                         <button
                           type="button"
                           onClick={() => handleDelete(product)}
-                          disabled={isDeleting}
+                          disabled={activeDeleteProductId === product.id}
                           className="rounded-2xl border border-[rgba(157,49,49,.18)] px-4 py-3 text-sm font-semibold text-[var(--danger)] disabled:opacity-50"
                         >
                           Xóa

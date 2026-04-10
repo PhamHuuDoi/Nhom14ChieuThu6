@@ -2,10 +2,7 @@ import { AxiosError, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import axios from 'axios';
 
 const resolveApiBaseUrl = () => {
-    if (!process.env.NEXT_PUBLIC_API_URL) {
-        throw new Error('Missing NEXT_PUBLIC_API_URL');
-    }
-    return process.env.NEXT_PUBLIC_API_URL;
+    return process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:5000/api';
 };
 
 const getReadableErrorMessage = (error: AxiosError) => {

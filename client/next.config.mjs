@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:5000/api';
+
 const nextConfig = {
     typescript: { ignoreBuildErrors: true },
     images: { unoptimized: true },
@@ -6,7 +8,7 @@ const nextConfig = {
         return [
             {
                 source: '/api/:path*',
-                destination: `${process.env.NEXT_PUBLIC_API_URL}/:path*`, // production server
+                destination: `${apiBaseUrl}/:path*`,
             },
         ];
     },

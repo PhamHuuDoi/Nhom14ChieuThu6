@@ -106,7 +106,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
                 for (const item of localItems) {
                     await cartService.addToCart({
-                        productId: String(item.id),
+                        productId: String(item.productId),
                         quantity: item.quantity,
                     });
                 }

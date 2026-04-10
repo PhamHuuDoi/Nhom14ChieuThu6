@@ -6,17 +6,13 @@ const SOCKET_EVENTS = {
 } as const
 
 const resolveSocketUrl = () => {
-  const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim()
-
-  if (!configuredBaseUrl) {
-    return process.env.NEXT_PUBLIC_API_URL || ""
-  }
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:5000/api"
 
   if (configuredBaseUrl.startsWith("/")) {
     if (typeof window !== "undefined") {
       const { hostname } = window.location
       if (hostname === "localhost" || hostname === "127.0.0.1") {
-        return process.env.NEXT_PUBLIC_API_URL;
+        return configuredBaseUrl
       }
     }
 

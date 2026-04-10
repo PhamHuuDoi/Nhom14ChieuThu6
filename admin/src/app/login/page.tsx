@@ -96,16 +96,9 @@ export default function LoginPage() {
             Khu vực quản trị dành cho vận hành quán cà phê
           </h1>
           <p className="mt-4 max-w-md text-sm leading-7 text-white/82">
-            Dùng URL quản trị riêng để xử lý sản phẩm, đơn hàng và người dùng mà
-            không lẫn với giao diện khách hàng.
+            Không gian quản trị tập trung cho sản phẩm, đơn hàng và người dùng.
           </p>
           <div className="mt-10 grid gap-4">
-            <div className="rounded-3xl border border-white/15 bg-white/10 p-4">
-              <p className="text-sm font-semibold">URL riêng</p>
-              <p className="mt-2 text-sm text-white/78">
-                Chạy trang này tại <span className="font-semibold">localhost:3001</span>
-              </p>
-            </div>
             <div className="rounded-3xl border border-white/15 bg-white/10 p-4">
               <p className="text-sm font-semibold">Dùng chung backend</p>
               <p className="mt-2 text-sm text-white/78">

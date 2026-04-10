@@ -115,7 +115,10 @@ export default function OrdersPage() {
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeOrderAction, setActiveOrderAction] = useState<{
+    id: number;
+    type: 'order_status' | 'payment_status';
+  } | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
@@ -256,7 +259,11 @@ export default function OrdersPage() {
   }, [currentPage, totalPages]);
 
   const handleChangeStatus = async (orderId: number, status: Order['order_status']) => {
-    setIsSubmitting(true);
+    const order = orders.find((item) => item.id === orderId);
+    if (!order || activeOrderAction) return;
+    if (order.order_status === status) return;
+
+    setActiveOrderAction({ id: orderId, type: 'order_status' });
     setErrorMessage('');
     setSuccessMessage('');
 
@@ -269,7 +276,7 @@ export default function OrdersPage() {
         error instanceof Error ? error.message : 'Không thể cập nhật trạng thái đơn hàng.'
       );
     } finally {
-      setIsSubmitting(false);
+      setActiveOrderAction(null);
     }
   };
 
@@ -277,7 +284,11 @@ export default function OrdersPage() {
     orderId: number,
     paymentStatus: Order['payment_status']
   ) => {
-    setIsSubmitting(true);
+    const order = orders.find((item) => item.id === orderId);
+    if (!order || activeOrderAction) return;
+    if (order.payment_status === paymentStatus) return;
+
+    setActiveOrderAction({ id: orderId, type: 'payment_status' });
     setErrorMessage('');
     setSuccessMessage('');
 
@@ -290,7 +301,7 @@ export default function OrdersPage() {
         error instanceof Error ? error.message : 'Không thể cập nhật trạng thái thanh toán.'
       );
     } finally {
-      setIsSubmitting(false);
+      setActiveOrderAction(null);
     }
   };
 
@@ -395,11 +406,17 @@ export default function OrdersPage() {
             {paginatedOrders.map((order) => {
               const isExpanded = expandedOrderId === order.id;
               const availableStatusOptions = getAvailableOrderStatusOptions(order);
+              const isUpdatingOrderStatus =
+                activeOrderAction?.id === order.id && activeOrderAction.type === 'order_status';
+              const isUpdatingPaymentStatus =
+                activeOrderAction?.id === order.id && activeOrderAction.type === 'payment_status';
               const isOrderStatusLocked =
+                isUpdatingOrderStatus ||
                 order.order_status === 'shipping' ||
                 order.order_status === 'completed' ||
                 order.order_status === 'cancelled';
-              const isPaymentStatusLocked = isSubmitting || order.order_status === 'cancelled';
+              const isPaymentStatusLocked =
+                isUpdatingPaymentStatus || order.order_status === 'cancelled';
 
               return (
                 <div
@@ -450,7 +467,7 @@ export default function OrdersPage() {
                           </p>
                           <select
                             value={order.order_status}
-                            disabled={isSubmitting || isOrderStatusLocked}
+                            disabled={isOrderStatusLocked}
                             onChange={(event) =>
                               handleChangeStatus(
                                 order.id,
@@ -472,6 +489,11 @@ export default function OrdersPage() {
                           {order.order_status === 'shipping' ? (
                             <p className="text-xs text-[var(--muted)]">
                               Khi khách xác nhận đã nhận hàng, đơn sẽ tự chuyển sang hoàn thành.
+                            </p>
+                          ) : null}
+                          {isUpdatingOrderStatus ? (
+                            <p className="text-xs text-[var(--muted)]">
+                              Đang cập nhật trạng thái đơn hàng...
                             </p>
                           ) : null}
                         </div>
@@ -500,6 +522,11 @@ export default function OrdersPage() {
                           {order.order_status === 'cancelled' ? (
                             <p className="text-xs text-[var(--muted)]">
                               Đơn đã hủy nên trạng thái thanh toán đã được khóa.
+                            </p>
+                          ) : null}
+                          {isUpdatingPaymentStatus ? (
+                            <p className="text-xs text-[var(--muted)]">
+                              Đang cập nhật trạng thái thanh toán...
                             </p>
                           ) : null}
                         </div>

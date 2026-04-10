@@ -46,7 +46,7 @@ const getReadableErrorMessage = (error: AxiosError) => {
 }
 
 const axiosInstance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "",
+  baseURL: process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:5000/api",
   timeout: 15000,
   withCredentials: true,
   headers: {

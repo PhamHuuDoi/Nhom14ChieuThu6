@@ -89,6 +89,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [isSavingAdditionalLocation, setIsSavingAdditionalLocation] =
     useState(false)
   const [isAddressPanelOpen, setIsAddressPanelOpen] = useState(false)
+  const [pendingNavHref, setPendingNavHref] = useState<string | null>(null)
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false)
   const [activeLocationId, setActiveLocationId] = useState<number | null>(null)
   const [pickupMessage, setPickupMessage] = useState("")
@@ -209,6 +210,11 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     void loadNotifications()
   }, [loadNotifications, pathname])
+
+  useEffect(() => {
+    setIsAddressPanelOpen(false)
+    setPendingNavHref(null)
+  }, [pathname])
 
   useEffect(() => {
     const handleAdminOrdersUpdated = () => {
@@ -695,13 +701,19 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           <nav className="mt-8 space-y-2">
             {navItems.map((item) => {
               const Icon = item.icon
-              const isActive = pathname === item.href
+              const isActive =
+                !isAddressPanelOpen &&
+                (pendingNavHref ? pendingNavHref === item.href : pathname === item.href)
               const isOrdersItem = item.href === "/orders"
 
               return (
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => {
+                    setPendingNavHref(item.href)
+                    setIsAddressPanelOpen(false)
+                  }}
                   className={`group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                     isActive
                       ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_16px_30px_rgba(109,63,31,0.22)]"
@@ -727,7 +739,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
 
             <button
               type="button"
-              onClick={() => setIsAddressPanelOpen((currentValue) => !currentValue)}
+              onClick={() => {
+                setPendingNavHref(null)
+                setIsAddressPanelOpen((currentValue) => !currentValue)
+              }}
               className={`group flex w-full items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition ${
                 isAddressPanelOpen
                   ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-[0_16px_30px_rgba(109,63,31,0.22)]"
@@ -812,12 +827,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
                   ) : null}
                 </button>
 
-                <div className="rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-sm text-[var(--muted)]">
-                  URL quản trị:{" "}
-                  <span className="font-semibold text-[var(--foreground)]">
-                    localhost:3001
-                  </span>
-                </div>
               </div>
             </div>
           </header>

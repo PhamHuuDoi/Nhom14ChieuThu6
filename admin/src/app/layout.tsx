@@ -7,6 +7,9 @@ import "./globals.css"
 export const metadata: Metadata = {
   title: "TheZooCoffee Admin",
   description: "Separate admin workspace for TheZooCoffee",
+  icons: {
+    icon: "/icon.svg",
+  },
 }
 
 export default function RootLayout({

@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL?.trim() || 'http://localhost:5000/api';
+
 const nextConfig = {
     reactStrictMode: true,
     typescript: {
@@ -9,13 +11,10 @@ const nextConfig = {
     },
 
     async rewrites() {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-        const destinationUrl = apiUrl.startsWith('http') ? apiUrl : `http://${apiUrl}`;
-
         return [
             {
                 source: '/api/:path*',
-                destination: `${destinationUrl}/:path*`,
+                destination: `${apiBaseUrl}/:path*`,
             },
         ];
     },

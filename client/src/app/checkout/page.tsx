@@ -55,6 +55,8 @@ const paymentMethods: PaymentOption[] = [
 ];
 
 const formatCurrency = (amount: number) => `${Math.round(amount).toLocaleString('vi-VN')} vnđ`;
+const PHONE_REGEX = /^(0|\+84)[0-9]{9}$/;
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function isAddressComplete(address: CheckoutAddress) {
     return Boolean(
@@ -65,6 +67,17 @@ function isAddressComplete(address: CheckoutAddress) {
             address.latitude &&
             address.longitude,
     );
+}
+
+function getAddressValidationError(address: CheckoutAddress) {
+    if (!address.fullName.trim()) return 'Vui lòng nhập tên người nhận.';
+    if (!address.phone.trim()) return 'Vui lòng nhập số điện thoại người nhận.';
+    if (!PHONE_REGEX.test(address.phone.trim())) return 'Số điện thoại người nhận chưa đúng định dạng.';
+    if (!address.email.trim()) return 'Vui lòng nhập email người nhận.';
+    if (!EMAIL_REGEX.test(address.email.trim())) return 'Email người nhận chưa đúng định dạng.';
+    if (!address.address.trim()) return 'Vui lòng chọn địa chỉ giao hàng.';
+    if (!address.latitude || !address.longitude) return 'Vui lòng chọn địa chỉ có tọa độ hợp lệ.';
+    return '';
 }
 
 export default function CheckoutPage() {
@@ -137,16 +150,26 @@ export default function CheckoutPage() {
     const selectedAddress = deliveryMode === 'account' ? accountAddress : otherAddress;
     const total = Math.max(0, subtotal - discountAmount) + (shippingFee ?? 0);
     const isShippingInfoComplete = isAddressComplete(selectedAddress);
+    const addressValidationError = getAddressValidationError(selectedAddress);
 
     const checkoutBlockReason = !currentUser
         ? 'Bạn cần đăng nhập trước khi đặt hàng.'
         : !isShippingInfoComplete
-          ? 'Bạn cần điền đủ thông tin người nhận và chọn địa chỉ có tọa độ trước khi đặt hàng.'
+          ? addressValidationError || 'Bạn cần điền đủ thông tin người nhận và chọn địa chỉ có tọa độ trước khi đặt hàng.'
           : isCalculatingShipping
             ? 'Hệ thống đang tính phí giao hàng theo khoảng cách.'
             : shippingFee === null
               ? 'Chưa lấy được phí giao hàng. Vui lòng thử lại sau.'
               : '';
+
+    useEffect(() => {
+        if (!appliedCoupon) {
+            return;
+        }
+
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+    }, [subtotal]);
 
     useEffect(() => {
         if (!selectedAddress.latitude || !selectedAddress.longitude || orderItems.length === 0) {
@@ -197,7 +220,23 @@ export default function CheckoutPage() {
         }));
     };
     const handleApplyCoupon = async () => {
-        if (!couponCode.trim()) return;
+        if (isApplyingCoupon || isProcessing) return;
+        if (!couponCode.trim()) {
+            toast({
+                title: 'Thiếu mã giảm giá',
+                description: 'Vui lòng nhập mã coupon trước khi áp dụng.',
+                variant: 'destructive',
+            });
+            return;
+        }
+        if (subtotal <= 0) {
+            toast({
+                title: 'Không thể áp dụng mã',
+                description: 'Giỏ hàng đang trống hoặc không hợp lệ.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
         if (appliedCoupon?.code === couponCode.trim()) {
             toast({
@@ -228,6 +267,10 @@ export default function CheckoutPage() {
     };
 
     const handlePlaceOrder = async () => {
+        if (isProcessing) {
+            return;
+        }
+
         setSubmitError('');
 
         if (!currentUser || !isShippingInfoComplete || shippingFee === null) {

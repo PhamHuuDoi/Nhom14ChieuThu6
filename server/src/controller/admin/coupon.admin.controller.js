@@ -102,7 +102,7 @@ function validateCouponAvailability(coupon) {
         throw new BadRequestError('Mã giảm giá chưa đến thời gian áp dụng');
     }
 
-    if (coupon.expires_at && new Date(coupon.expires_at) < now) {
+    if (coupon.expires_at && new Date(coupon.expires_at) <= now) {
         throw new BadRequestError('Mã giảm giá đã hết hạn');
     }
 

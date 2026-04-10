@@ -24,8 +24,7 @@ export const metadata: Metadata = {
         'Trải nghiệm cà phê thủ công tinh tế nhất tại TheZooCoffee. Đồ uống được chế biến thủ công, hạt cà phê cao cấp và không gian ấm cúng.',
     generator: 'Next.js',
     icons: {
-        icon: '/placeholder-logo.svg',
-        apple: '/placeholder-logo.png',
+        icon: '/icon.svg',
     },
 };
 

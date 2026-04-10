@@ -19,6 +19,9 @@ export default function CartPage() {
     const { items, updateQuantity, removeFromCart, totalItems, totalPrice, clearCart } = useCart();
     const { user } = useAuth();
     const [loginNotice, setLoginNotice] = useState('');
+    const [actionError, setActionError] = useState('');
+    const [busyItemIds, setBusyItemIds] = useState<number[]>([]);
+    const [isClearingCart, setIsClearingCart] = useState(false);
     const [quantityDrafts, setQuantityDrafts] = useState<Record<number, string>>({});
 
     // Đồng bộ quantityDrafts với items thật
@@ -36,6 +39,7 @@ export default function CartPage() {
 
         if (!rawValue || Number.isNaN(parsedQuantity)) {
             setQuantityDrafts((prev) => ({ ...prev, [itemId]: String(fallbackQuantity) }));
+            setActionError('Số lượng không hợp lệ. Hệ thống đã khôi phục giá trị trước đó.');
             return;
         }
 
@@ -43,7 +47,64 @@ export default function CartPage() {
         setQuantityDrafts((prev) => ({ ...prev, [itemId]: String(nextQuantity) }));
 
         if (nextQuantity !== fallbackQuantity) {
+            setBusyItemIds((prev) => [...prev, itemId]);
+            setActionError('');
+            try {
+                await updateQuantity(itemId, nextQuantity);
+            } catch (error) {
+                setQuantityDrafts((prev) => ({ ...prev, [itemId]: String(fallbackQuantity) }));
+                setActionError(error instanceof Error ? error.message : 'Không thể cập nhật số lượng sản phẩm.');
+            } finally {
+                setBusyItemIds((prev) => prev.filter((id) => id !== itemId));
+            }
+        }
+    };
+
+    const handleQuickQuantityChange = async (itemId: number, currentQuantity: number, delta: number) => {
+        if (busyItemIds.includes(itemId)) return;
+
+        const nextQuantity = Math.max(1, currentQuantity + delta);
+        setQuantityDrafts((prev) => ({ ...prev, [itemId]: String(nextQuantity) }));
+        setBusyItemIds((prev) => [...prev, itemId]);
+        setActionError('');
+
+        try {
             await updateQuantity(itemId, nextQuantity);
+        } catch (error) {
+            setQuantityDrafts((prev) => ({ ...prev, [itemId]: String(currentQuantity) }));
+            setActionError(error instanceof Error ? error.message : 'Không thể cập nhật số lượng sản phẩm.');
+        } finally {
+            setBusyItemIds((prev) => prev.filter((id) => id !== itemId));
+        }
+    };
+
+    const handleRemoveItem = async (itemId: number) => {
+        if (busyItemIds.includes(itemId)) return;
+
+        setBusyItemIds((prev) => [...prev, itemId]);
+        setActionError('');
+
+        try {
+            await removeFromCart(itemId);
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'Không thể xóa sản phẩm khỏi giỏ hàng.');
+        } finally {
+            setBusyItemIds((prev) => prev.filter((id) => id !== itemId));
+        }
+    };
+
+    const handleClearCart = async () => {
+        if (isClearingCart || items.length === 0) return;
+
+        setIsClearingCart(true);
+        setActionError('');
+
+        try {
+            await clearCart();
+        } catch (error) {
+            setActionError(error instanceof Error ? error.message : 'Không thể xóa toàn bộ giỏ hàng.');
+        } finally {
+            setIsClearingCart(false);
         }
     };
 
@@ -75,6 +136,11 @@ export default function CartPage() {
                 {loginNotice ? (
                     <div className="mb-6 rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-4 text-sm text-destructive">
                         {loginNotice}
+                    </div>
+                ) : null}
+                {actionError ? (
+                    <div className="mb-6 rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-4 text-sm text-destructive">
+                        {actionError}
                     </div>
                 ) : null}
 
@@ -134,7 +200,10 @@ export default function CartPage() {
                                                         {item.description}
                                                     </p>
                                                     <button
-                                                        onClick={() => removeFromCart(item.id)}
+                                                        onClick={() => {
+                                                            void handleRemoveItem(item.id);
+                                                        }}
+                                                        disabled={busyItemIds.includes(item.id)}
                                                         className="mt-2 inline-flex items-center gap-1 text-sm text-destructive hover:underline md:hidden"
                                                     >
                                                         <Trash2 className="h-3.5 w-3.5" />
@@ -149,14 +218,10 @@ export default function CartPage() {
                                                 </span>
                                                 <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-1">
                                                     <button
-                                                        onClick={async () => {
-                                                            const nextQuantity = Math.max(1, item.quantity - 1);
-                                                            setQuantityDrafts((prev) => ({
-                                                                ...prev,
-                                                                [item.id]: String(nextQuantity),
-                                                            }));
-                                                            await updateQuantity(item.id, nextQuantity);
+                                                        onClick={() => {
+                                                            void handleQuickQuantityChange(item.id, item.quantity, -1);
                                                         }}
+                                                        disabled={busyItemIds.includes(item.id)}
                                                         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                         aria-label="Giảm số lượng"
                                                     >
@@ -188,14 +253,10 @@ export default function CartPage() {
                                                     />
 
                                                     <button
-                                                        onClick={async () => {
-                                                            const nextQuantity = item.quantity + 1;
-                                                            setQuantityDrafts((prev) => ({
-                                                                ...prev,
-                                                                [item.id]: String(nextQuantity),
-                                                            }));
-                                                            await updateQuantity(item.id, nextQuantity);
+                                                        onClick={() => {
+                                                            void handleQuickQuantityChange(item.id, item.quantity, 1);
                                                         }}
+                                                        disabled={busyItemIds.includes(item.id)}
                                                         className="flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                                                         aria-label="Tăng số lượng"
                                                     >
@@ -222,7 +283,10 @@ export default function CartPage() {
                                                         {formatCurrency(item.price * item.quantity)}
                                                     </span>
                                                     <button
-                                                        onClick={() => removeFromCart(item.id)}
+                                                        onClick={() => {
+                                                            void handleRemoveItem(item.id);
+                                                        }}
+                                                        disabled={busyItemIds.includes(item.id)}
                                                         className="hidden h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive md:flex"
                                                         aria-label="Xóa sản phẩm"
                                                     >
@@ -236,7 +300,10 @@ export default function CartPage() {
 
                                 <div className="border-t border-border px-6 py-4">
                                     <button
-                                        onClick={clearCart}
+                                        onClick={() => {
+                                            void handleClearCart();
+                                        }}
+                                        disabled={isClearingCart}
                                         className="text-sm text-muted-foreground transition-colors hover:text-destructive"
                                     >
                                         Xóa toàn bộ giỏ hàng
