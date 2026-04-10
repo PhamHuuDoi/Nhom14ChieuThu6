@@ -18,6 +18,7 @@ import {
   Trash2,
   TicketPercent,
   Users,
+  X,
 } from "lucide-react"
 
 import { useAuth } from "@/context/auth-context"
@@ -531,17 +532,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
 
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-2xl border border-[var(--border)] bg-white text-[var(--foreground)] lg:self-start">
-          {isAddressPanelOpen ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center self-end rounded-2xl border border-[var(--border)] bg-white text-[var(--foreground)] transition hover:border-[var(--primary)] hover:text-[var(--primary)] lg:self-start">
+          <X className="h-4 w-4" />
         </span>
       </button>
 
-      {isAddressPanelOpen ? (
-        <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
+      <div className="mt-6 grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
             <div className="rounded-3xl border border-[var(--border)] bg-white p-5">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -680,7 +676,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               )}
             </div>
           </div>
-      ) : null}
     </section>
   )
 
@@ -832,8 +827,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           </header>
 
           <div className="space-y-4">
-            {isAddressPanelOpen ? storeLocationPanel : null}
-            <main>{children}</main>
+            {isAddressPanelOpen ? storeLocationPanel : <main>{children}</main>}
           </div>
         </div>
       </div>
